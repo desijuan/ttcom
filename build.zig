@@ -8,26 +8,20 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 
     const exe = b.addExecutable(.{
         .name = "ttcom",
         .root_module = root_mod,
+        .use_llvm = true,
     });
 
     //
-    // - SQLite3 -
+    // - GTK 3 -
     //
-    switch (optimize) {
-        .Debug => root_mod.linkSystemLibrary("sqlite3", .{}),
-        else => {
-            root_mod.addIncludePath(b.path("sqlite3"));
-            root_mod.addCSourceFile(.{
-                .file = b.path("sqlite3/sqlite3.c"),
-                .flags = &.{},
-            });
-        },
-    }
+    root_mod.linkSystemLibrary("c", .{});
+    root_mod.linkSystemLibrary("gtk+-3.0", .{ .use_pkg_config = .force });
 
     b.installArtifact(exe);
 
