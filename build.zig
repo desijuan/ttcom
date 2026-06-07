@@ -4,14 +4,30 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const root_mod: *std.Build.Module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
     const exe = b.addExecutable(.{
         .name = "ttcom",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
+        .root_module = root_mod,
     });
+
+    //
+    // - SQLite3 -
+    //
+    switch (optimize) {
+        .Debug => root_mod.linkSystemLibrary("sqlite3", .{}),
+        else => {
+            root_mod.addIncludePath(b.path("sqlite3"));
+            root_mod.addCSourceFile(.{
+                .file = b.path("sqlite3/sqlite3.c"),
+                .flags = &.{},
+            });
+        },
+    }
 
     b.installArtifact(exe);
 
