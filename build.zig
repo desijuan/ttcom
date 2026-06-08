@@ -17,6 +17,19 @@ pub fn build(b: *std.Build) void {
         .use_llvm = true,
     });
 
+    // - SQLite3 -
+    //
+    switch (optimize) {
+        .Debug => root_mod.linkSystemLibrary("sqlite3", .{}),
+        else => {
+            root_mod.addIncludePath(b.path("sqlite3"));
+            root_mod.addCSourceFile(.{
+                .file = b.path("sqlite3/sqlite3.c"),
+                .flags = &.{},
+            });
+        },
+    }
+
     //
     // - GTK 3 -
     //
