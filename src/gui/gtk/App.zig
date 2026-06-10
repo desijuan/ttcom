@@ -7,7 +7,7 @@ const Tabs = @import("body/Tabs.zig");
 const StatusBar = @import("body/StatusBar.zig");
 
 pub fn run(model: *Model) c_int {
-    const app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage", c.G_APPLICATION_DEFAULT_FLAGS);
+    const app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage.ttcom", c.G_APPLICATION_DEFAULT_FLAGS);
     defer c.g_object_unref(app);
     _ = c.g_signal_connect_data(app, "activate", @ptrCast(&activate), @ptrCast(model), null, 0);
     return c.g_application_run(@ptrCast(app), 0, null);

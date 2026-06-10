@@ -2,21 +2,30 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const log = std.log;
 
+const Conn = @import("db/Conn.zig");
+
 const TabLog = struct {};
 
 const TabClocks = struct {};
 
-const TabSettings = struct {
-    push_ip: [:0]const u8,
-    push_freq: [:0]const u8,
+pub const Config = struct {
     log_file: [:0]const u8,
-    timeout: [:0]const u8,
+    push_ip: [:0]const u8,
+    push_port: u16,
+    push_freq_s: u32,
+    timeout_s: u32,
+
+    pub fn destroy(cfg: *Config, a: Allocator) void {
+        a.free(cfg.log_file);
+        a.free(cfg.push_ip);
+        a.destroy(cfg);
+    }
 };
 
 const Tabs = struct {
     t_log: TabLog,
     t_clocks: TabClocks,
-    t_settings: TabSettings,
+    t_settings: Config,
 };
 
 pub const Status = enum {
@@ -36,25 +45,20 @@ status: Status,
 
 pub fn create(
     a: Allocator,
-    push_ip: [:0]const u8,
-    push_freq: [:0]const u8,
-    log_file: [:0]const u8,
-    timeout: [:0]const u8,
+    conn: Conn,
     status: Status,
-) error{OutOfMemory}!*Model {
+) (Conn.GetConfigError || error{OutOfMemory})!*Model {
     const model: *Model = try a.create(Model);
     errdefer a.destroy(model);
+
+    const cfg: *Config = try conn.getConfig(a);
+    defer a.destroy(cfg);
 
     model.* = Model{
         .tabs = Tabs{
             .t_log = TabLog{},
             .t_clocks = TabClocks{},
-            .t_settings = TabSettings{
-                .push_ip = push_ip,
-                .push_freq = push_freq,
-                .log_file = log_file,
-                .timeout = timeout,
-            },
+            .t_settings = cfg.*,
         },
         .status = status,
     };
@@ -63,5 +67,7 @@ pub fn create(
 }
 
 pub fn destroy(model: *Model, a: Allocator) void {
+    a.free(model.tabs.t_settings.log_file);
+    a.free(model.tabs.t_settings.push_ip);
     a.destroy(model);
 }

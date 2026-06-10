@@ -1,3 +1,5 @@
+const std = @import("std");
+
 const c = @import("../.././../../c.zig").c;
 
 const Model = @import("../../../../model/Model.zig");
@@ -25,19 +27,21 @@ fn row(label_text: [:0]const u8, field: [*c]c.GtkWidget, extra: ?[*c]c.GtkWidget
 pub fn create(model: *Model) [*c]c.GtkWidget {
     const settings = model.tabs.t_settings;
 
+    var buf: [32:0]u8 = undefined;
+
     // Fields
     const fld_ip: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
     c.gtk_entry_set_text(fld_ip, settings.push_ip);
 
     const fld_freq: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_freq, settings.push_freq);
+    c.gtk_entry_set_text(fld_freq, std.fmt.bufPrintZ(&buf, "{d}", .{settings.push_freq_s}) catch @panic("OOM"));
     c.gtk_widget_set_size_request(@ptrCast(fld_freq), w_field, -1);
 
     const fld_logfile: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
     c.gtk_entry_set_text(fld_logfile, settings.log_file);
 
     const fld_timeout: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_timeout, settings.timeout);
+    c.gtk_entry_set_text(fld_timeout, std.fmt.bufPrintZ(&buf, "{d}", .{settings.timeout_s}) catch @panic("OOM"));
     c.gtk_widget_set_size_request(@ptrCast(fld_timeout), w_field, -1);
 
     // Browse button
