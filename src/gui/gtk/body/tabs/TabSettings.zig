@@ -1,5 +1,7 @@
 const c = @import("../.././../../c.zig").c;
 
+const Model = @import("../../../../model/Model.zig");
+
 pub const label = "Settings";
 
 const w_field = 130;
@@ -20,21 +22,22 @@ fn row(label_text: [:0]const u8, field: [*c]c.GtkWidget, extra: ?[*c]c.GtkWidget
     return hbox;
 }
 
-pub fn create() [*c]c.GtkWidget {
+pub fn create(model: *Model) [*c]c.GtkWidget {
+    const settings = model.tabs.t_settings;
 
     // Fields
     const fld_ip: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_ip, "192.168.1.100");
+    c.gtk_entry_set_text(fld_ip, settings.push_ip);
 
     const fld_freq: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_freq, "5");
+    c.gtk_entry_set_text(fld_freq, settings.push_freq);
     c.gtk_widget_set_size_request(@ptrCast(fld_freq), w_field, -1);
 
-    const fld_dbfile: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_dbfile, "clocks.db");
+    const fld_logfile: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
+    c.gtk_entry_set_text(fld_logfile, settings.log_file);
 
     const fld_timeout: [*c]c.GtkEntry = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(fld_timeout, "30");
+    c.gtk_entry_set_text(fld_timeout, settings.timeout);
     c.gtk_widget_set_size_request(@ptrCast(fld_timeout), w_field, -1);
 
     // Browse button
@@ -58,7 +61,7 @@ pub fn create() [*c]c.GtkWidget {
 
     c.gtk_box_pack_start(@ptrCast(vbox), row("Push IP:", @ptrCast(fld_ip), null), 0, 0, 0);
     c.gtk_box_pack_start(@ptrCast(vbox), row("Push Frequency:", @ptrCast(fld_freq), c.gtk_label_new("seconds")), 0, 0, 0);
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Database File:", @ptrCast(fld_dbfile), btn_browse), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Log File:", @ptrCast(fld_logfile), btn_browse), 0, 0, 0);
     c.gtk_box_pack_start(@ptrCast(vbox), row("Timeout:", @ptrCast(fld_timeout), c.gtk_label_new("seconds")), 0, 0, 0);
 
     c.gtk_box_pack_end(@ptrCast(vbox), btn_save, 0, 0, 0);

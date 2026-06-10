@@ -1,5 +1,8 @@
 const c = @import("../../../../c.zig").c;
 
+const cfg = @import("../../../../config.zig");
+const Model = @import("../../../../model/Model.zig");
+
 pub const label = "Log";
 
 fn log_append(log_buffer: [*c]c.GtkTextBuffer, log_view: [*c]c.GtkTextView, line: [:0]const u8) void {
@@ -17,7 +20,7 @@ fn log_append(log_buffer: [*c]c.GtkTextBuffer, log_view: [*c]c.GtkTextView, line
     c.gtk_text_view_scroll_mark_onscreen(@as(*c.GtkTextView, log_view), mark);
 }
 
-pub fn create() *c.GtkWidget {
+pub fn create(_: *Model) *c.GtkWidget {
     // Text view inside a scrolled window
     const scroll: [*c]c.GtkWidget = c.gtk_scrolled_window_new(null, null);
     c.gtk_scrolled_window_set_policy(
@@ -36,7 +39,7 @@ pub fn create() *c.GtkWidget {
     c.gtk_text_view_set_monospace(log_view, 1);
 
     log_append(log_buffer, log_view, "[INFO] Application started");
-    log_append(log_buffer, log_view, "[INFO] Connected to database: db.sqlite");
+    log_append(log_buffer, log_view, "[INFO] Connected to database: " ++ cfg.db_name);
     log_append(log_buffer, log_view, "[INFO] Polling interval: 5s");
     log_append(log_buffer, log_view, "[WARN] Clock 3 (Tokyo) last seen 42s ago");
     log_append(log_buffer, log_view, "[INFO] Clock 1 (New York) synced OK");
