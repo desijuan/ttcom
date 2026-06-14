@@ -1,6 +1,7 @@
-const c = @import("../../../c.zig").c;
+const c = @import("../../c.zig").gtk;
 
-const App = @import("../App.zig");
+const App = @import("App.zig");
+
 const TabLog = @import("tabs/TabLog.zig");
 const TabClocks = @import("tabs/TabClocks.zig");
 const TabSettings = @import("tabs/TabSettings.zig");

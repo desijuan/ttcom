@@ -5,7 +5,7 @@ const cfg = @import("config.zig");
 const Conn = @import("model/db/Conn.zig");
 const App = @import("gui/gtk/App.zig");
 
-pub fn main() !void {
+pub fn main() (Conn.OpenError || App.CreateError)!void {
     var da_inst = std.heap.DebugAllocator(.{ .safety = true }){};
     defer log.debug("gpa: {}", .{da_inst.deinit()});
 

@@ -2,7 +2,7 @@
     .name = .ttcom,
     .version = "0.0.1",
     .fingerprint = 0xb5da992d842bb850, // Changing this has security and trust implications.
-    .minimum_zig_version = "0.16.0",
+    .minimum_zig_version = "0.15.2",
     .dependencies = .{},
     .paths = .{
         "build.zig",

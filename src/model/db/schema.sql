@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS config (
+CREATE TABLE IF NOT EXISTS settings (
     id          INTEGER PRIMARY KEY CHECK (id = 1) DEFAULT 1,
     log_file    TEXT    NOT NULL,
     push_ip     TEXT    NOT NULL,

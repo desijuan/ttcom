@@ -1,7 +1,7 @@
-const c = @import("../../../../c.zig").c;
+const c = @import("../../../c.zig").gtk;
 
-const cfg = @import("../../../../config.zig");
-const App = @import("../../App.zig");
+const cfg = @import("../../../config.zig");
+const App = @import("../App.zig");
 
 pub const label = "Log";
 

@@ -1,6 +1,6 @@
-const c = @import("../../../c.zig").c;
+const c = @import("../../c.zig").gtk;
 
-const App = @import("../App.zig");
+const App = @import("App.zig");
 
 pub fn create(app: *App) [*c]c.GtkWidget {
     const status_label: [*c]c.GtkWidget = c.gtk_label_new(App.Status.Ready.tagName());

@@ -1,10 +1,10 @@
 const std = @import("std");
 const log = std.log;
 
-const c = @import("../.././../../c.zig").c;
+const c = @import(".././../../c.zig").gtk;
 
-const App = @import("../../App.zig");
-const Config = @import("../../../../model/db/Conn.zig").Config;
+const App = @import("../App.zig");
+const Settings = @import("../../../model/Settings.zig");
 
 pub const label = "Settings";
 
@@ -29,32 +29,32 @@ fn row(label_text: [:0]const u8, field: [*c]c.GtkWidget, extra: ?[*c]c.GtkWidget
 pub fn create(app: *App) [*c]c.GtkWidget {
     var buf: [32:0]u8 = undefined;
 
-    const cfg: *Config = app.readConfig() catch @panic("TODO: Handle this error");
-    defer cfg.destroy(app.a);
+    // TODO: handle errors properly
+    const settings: *Settings = app.readSettings() catch @panic("ReadSettingsError");
+    defer settings.destroy(app.a);
+
+    // Fields
 
     app.fields.log_file = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(app.fields.log_file, cfg.log_file);
-
     app.fields.push_ip = @ptrCast(c.gtk_entry_new());
-    c.gtk_entry_set_text(app.fields.push_ip, cfg.push_ip);
-
     app.fields.push_port = @ptrCast(c.gtk_entry_new());
+    app.fields.push_freq_s = @ptrCast(c.gtk_entry_new());
+    app.fields.timeout_s = @ptrCast(c.gtk_entry_new());
+
+    c.gtk_entry_set_text(app.fields.log_file, settings.log_file);
+    c.gtk_entry_set_text(app.fields.push_ip, settings.push_ip);
     c.gtk_entry_set_text(
         app.fields.push_port,
-        std.fmt.bufPrintZ(&buf, "{d}", .{cfg.push_port}) catch @panic("OOM"),
+        std.fmt.bufPrintZ(&buf, "{d}", .{settings.push_port}) catch @panic("OOM"),
     );
-
-    app.fields.push_freq_s = @ptrCast(c.gtk_entry_new());
     c.gtk_entry_set_text(
         app.fields.push_freq_s,
-        std.fmt.bufPrintZ(&buf, "{d}", .{cfg.push_freq_s}) catch @panic("OOM"),
+        std.fmt.bufPrintZ(&buf, "{d}", .{settings.push_freq_s}) catch @panic("OOM"),
     );
     c.gtk_widget_set_size_request(@ptrCast(app.fields.push_freq_s), w_field, -1);
-
-    app.fields.timeout_s = @ptrCast(c.gtk_entry_new());
     c.gtk_entry_set_text(
         app.fields.timeout_s,
-        std.fmt.bufPrintZ(&buf, "{d}", .{cfg.timeout_s}) catch @panic("OOM"),
+        std.fmt.bufPrintZ(&buf, "{d}", .{settings.timeout_s}) catch @panic("OOM"),
     );
     c.gtk_widget_set_size_request(@ptrCast(app.fields.timeout_s), w_field, -1);
 
@@ -97,11 +97,11 @@ fn clicked_on_browse(_: [*c]c.GtkButton, _: c.gpointer) callconv(.c) void {
 }
 
 fn clicked_on_save(_: [*c]c.GtkButton, data: c.gpointer) callconv(.c) void {
-    const app: *App = @ptrCast(@alignCast(data));
-    app.saveConfig() catch |err| {
+    const app: *const App = @ptrCast(@alignCast(data));
+    app.writeSettings() catch |err| {
         app.setStatus(.Error);
         log.err("{t}", .{err});
         return;
     };
-    log.info("Config saved", .{});
+    log.info("Settings saved", .{});
 }
