@@ -5,8 +5,7 @@ const log = std.log;
 const c = @import("../../c.zig").c;
 
 const Conn = @import("../../model/db/Conn.zig");
-const Model = @import("../../model/Model.zig");
-const Config = Model.Config;
+const Config = Conn.Config;
 const TabLog = @import("body/tabs/TabLog.zig");
 const TabSettings = @import("body/tabs/TabSettings.zig");
 const Tabs = @import("body/Tabs.zig");
@@ -32,19 +31,19 @@ pub const Status = enum {
 
 const App = @This();
 
-model: *Model,
+a: Allocator,
 conn: Conn,
 gtk_app: [*c]c.GtkApplication,
 fields: Fields = .{},
 status: [*c]c.GtkLabel = null,
 
-pub fn create(a: Allocator, model: *Model, conn: Conn) error{OutOfMemory}!*const App {
+pub fn create(a: Allocator, conn: Conn) error{OutOfMemory}!*const App {
     const gtk_app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage.ttcom", c.G_APPLICATION_DEFAULT_FLAGS);
 
     const app: *App = try a.create(App);
     errdefer a.destroy(app);
 
-    app.* = App{ .model = model, .conn = conn, .gtk_app = gtk_app };
+    app.* = App{ .a = a, .conn = conn, .gtk_app = gtk_app };
 
     _ = c.g_signal_connect_data(gtk_app, "activate", @ptrCast(&activate), @ptrCast(app), null, 0);
 
@@ -58,6 +57,10 @@ pub fn destroy(self: *const App, a: Allocator) void {
 pub fn run(self: App) c_int {
     defer c.g_object_unref(self.gtk_app);
     return c.g_application_run(@ptrCast(self.gtk_app), 0, null);
+}
+
+pub fn readConfig(self: App) !*Config {
+    return self.conn.readConfig(self.a);
 }
 
 pub fn saveConfig(self: App) !void {

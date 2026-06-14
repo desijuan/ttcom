@@ -41,9 +41,9 @@ pub fn create(_: *App) *c.GtkWidget {
     log_append(log_buffer, log_view, "[INFO] Application started");
     log_append(log_buffer, log_view, "[INFO] Connected to database: " ++ cfg.db_name);
     log_append(log_buffer, log_view, "[INFO] Polling interval: 5s");
-    log_append(log_buffer, log_view, "[WARN] Clock 3 (Tokyo) last seen 42s ago");
-    log_append(log_buffer, log_view, "[INFO] Clock 1 (New York) synced OK");
-    log_append(log_buffer, log_view, "[INFO] Clock 2 (London) synced OK");
+    log_append(log_buffer, log_view, "[WARN] Clock 3 (Cancillería Estacionamiento) last seen 42s ago");
+    log_append(log_buffer, log_view, "[INFO] Clock 1 (Cancillería Entrada Principal) synced OK");
+    log_append(log_buffer, log_view, "[INFO] Clock 2 (Cancillería Entrada Lateral) synced OK");
 
     c.gtk_container_add(@ptrCast(scroll), @ptrCast(log_view));
     c.gtk_widget_set_vexpand(scroll, 0);

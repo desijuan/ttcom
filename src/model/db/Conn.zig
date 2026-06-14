@@ -5,15 +5,28 @@ const log = std.log;
 const c = @cImport(@cInclude("sqlite3.h"));
 
 const utils = @import("../../utils.zig");
-const Config = @import("../../model/Model.zig").Config;
 
 const path_db_schema = "src/model/db/schema.sql";
 
 pub const sqlite3 = c.sqlite3;
 
-p_db: ?*c.sqlite3,
+pub const Config = struct {
+    log_file: [:0]const u8,
+    push_ip: [:0]const u8,
+    push_port: u16,
+    push_freq_s: u32,
+    timeout_s: u32,
+
+    pub fn destroy(cfg: *Config, a: Allocator) void {
+        a.free(cfg.log_file);
+        a.free(cfg.push_ip);
+        a.destroy(cfg);
+    }
+};
 
 const Conn = @This();
+
+p_db: ?*c.sqlite3,
 
 const OpenError = utils.ReadFileZError || error{ OpenFailed, SchemaExecFailed };
 
