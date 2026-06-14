@@ -1,10 +1,10 @@
 const c = @import("../../../../c.zig").c;
 
-const Model = @import("../../../../model/Model.zig");
+const App = @import("../../App.zig");
 
 pub const label = "Clocks";
 
-pub fn create(_: *Model) *c.GtkWidget {
+pub fn create(_: *App) *c.GtkWidget {
     const lbl: [*c]c.GtkWidget = c.gtk_label_new("WIP");
     return lbl;
 }

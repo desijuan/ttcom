@@ -7,20 +7,19 @@ const Conn = @import("model/db/Conn.zig");
 const App = @import("gui/gtk/App.zig");
 
 pub fn main() !void {
-    var a_inst = std.heap.DebugAllocator(.{ .safety = true }){};
-    defer log.debug("gpa: {}", .{a_inst.deinit()});
+    var da_inst = std.heap.DebugAllocator(.{ .safety = true }){};
+    defer log.debug("gpa: {}", .{da_inst.deinit()});
 
-    const a = a_inst.allocator();
+    const da = da_inst.allocator();
 
-    const conn = try Conn.open(a, cfg.db_name);
+    const conn = try Conn.open(da, cfg.db_name);
     defer conn.close() catch {};
 
-    const model: *Model = try Model.create(
-        a,
-        conn,
-        .Ready,
-    );
-    defer model.destroy(a);
+    const model: *Model = try Model.create(da, conn);
+    defer model.destroy(da);
 
-    _ = App.run(model);
+    const app = try App.create(da, model, conn);
+    defer app.destroy(da);
+
+    _ = app.run();
 }

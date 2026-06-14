@@ -1,7 +1,7 @@
 const c = @import("../../../../c.zig").c;
 
 const cfg = @import("../../../../config.zig");
-const Model = @import("../../../../model/Model.zig");
+const App = @import("../../App.zig");
 
 pub const label = "Log";
 
@@ -20,7 +20,7 @@ fn log_append(log_buffer: [*c]c.GtkTextBuffer, log_view: [*c]c.GtkTextView, line
     c.gtk_text_view_scroll_mark_onscreen(@as(*c.GtkTextView, log_view), mark);
 }
 
-pub fn create(_: *Model) *c.GtkWidget {
+pub fn create(_: *App) *c.GtkWidget {
     // Text view inside a scrolled window
     const scroll: [*c]c.GtkWidget = c.gtk_scrolled_window_new(null, null);
     c.gtk_scrolled_window_set_policy(

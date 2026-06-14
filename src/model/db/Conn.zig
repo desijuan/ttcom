@@ -64,9 +64,9 @@ pub fn close(self: Conn) error{CloseFailed}!void {
     log.info("Closed the database", .{});
 }
 
-pub const GetConfigError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
+pub const ReadConfigError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
 
-pub fn getConfig(self: Conn, a: Allocator) GetConfigError!*Config {
+pub fn readConfig(self: Conn, a: Allocator) ReadConfigError!*Config {
     const sql = "SELECT log_file, push_ip, push_port, push_freq_s, timeout_s FROM config";
 
     var stmt: ?*c.sqlite3_stmt = null;
@@ -110,6 +110,40 @@ pub fn getConfig(self: Conn, a: Allocator) GetConfigError!*Config {
     };
 
     return cfg;
+}
+
+pub const WriteConfigError = error{ PrepareFailed, BindFailed, StepFailed };
+
+pub fn writeConfig(self: Conn, cfg: *const Config) WriteConfigError!void {
+    const sql =
+        \\UPDATE config 
+        \\SET log_file=?, push_ip=?, push_port=?, push_freq_s=?, timeout_s=? 
+        \\WHERE id = 1;
+    ;
+
+    var stmt: ?*c.sqlite3_stmt = null;
+    const rc_prep = c.sqlite3_prepare_v2(self.p_db, sql, -1, &stmt, null);
+    if (rc_prep != c.SQLITE_OK) {
+        log.err("sqlite3_prepare_v2: {s}", .{c.sqlite3_errmsg(self.p_db)});
+        return error.PrepareFailed;
+    }
+    defer _ = c.sqlite3_finalize(stmt);
+
+    if (c.sqlite3_bind_text(stmt, 1, cfg.log_file.ptr, -1, c.SQLITE_STATIC) != c.SQLITE_OK or
+        c.sqlite3_bind_text(stmt, 2, cfg.push_ip.ptr, -1, c.SQLITE_STATIC) != c.SQLITE_OK or
+        c.sqlite3_bind_int(stmt, 3, @intCast(cfg.push_port)) != c.SQLITE_OK or
+        c.sqlite3_bind_int(stmt, 4, @intCast(cfg.push_freq_s)) != c.SQLITE_OK or
+        c.sqlite3_bind_int(stmt, 5, @intCast(cfg.timeout_s)) != c.SQLITE_OK)
+    {
+        log.err("sqlite3_bind: {s}", .{c.sqlite3_errmsg(self.p_db)});
+        return error.BindFailed;
+    }
+
+    const rc_step = c.sqlite3_step(stmt);
+    if (rc_step != c.SQLITE_DONE) {
+        log.err("sqlite3_step: {s}", .{c.sqlite3_errmsg(self.p_db)});
+        return error.StepFailed;
+    }
 }
 
 fn columnSlice(stmt: ?*c.sqlite3_stmt, col: c_int) [:0]const u8 {
