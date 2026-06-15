@@ -1,8 +1,9 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 const log = std.log;
 
 const c = @import("../../c.zig").gtk;
+
+const mem = @import("../../mem.zig");
 
 const Conn = @import("../../model/db/Conn.zig");
 const Settings = @import("../../model/Settings.zig");
@@ -30,7 +31,6 @@ pub const Status = enum {
 
 const App = @This();
 
-a: Allocator,
 conn: Conn,
 gtk_app: [*c]c.GtkApplication,
 fields: ConfigFields = .{},
@@ -38,21 +38,21 @@ status: [*c]c.GtkLabel = null,
 
 pub const CreateError = error{OutOfMemory};
 
-pub fn create(a: Allocator, conn: Conn) CreateError!*const App {
+pub fn create(conn: Conn) CreateError!*const App {
     const gtk_app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage.ttcom", c.G_APPLICATION_DEFAULT_FLAGS);
 
-    const app: *App = try a.create(App);
-    errdefer a.destroy(app);
+    const app: *App = try mem.a.create(App);
+    errdefer mem.a.destroy(app);
 
-    app.* = App{ .a = a, .conn = conn, .gtk_app = gtk_app };
+    app.* = App{ .conn = conn, .gtk_app = gtk_app };
 
     _ = c.g_signal_connect_data(gtk_app, "activate", @ptrCast(&activate), @ptrCast(app), null, 0);
 
     return app;
 }
 
-pub fn destroy(self: *const App, a: Allocator) void {
-    a.destroy(self);
+pub fn destroy(self: *const App) void {
+    mem.a.destroy(self);
 }
 
 pub fn run(self: App) c_int {
@@ -79,7 +79,7 @@ fn activate(_: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
 pub const ReadSettingsError = Settings.ReadFromConnError;
 
 pub fn readSettings(self: App) ReadSettingsError!*Settings {
-    return Settings.readFromConn(self.a, self.conn);
+    return Settings.readFromConn(self.conn);
 }
 
 pub const WriteSettingsError = std.fmt.ParseIntError || Settings.WriteToConnError;

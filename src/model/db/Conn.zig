@@ -1,9 +1,9 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 const log = std.log;
 
 const c = @import("../../c.zig").sqlite3;
 
+const mem = @import("../../mem.zig");
 const utils = @import("../../utils.zig");
 
 const path_db_schema = "src/model/db/schema.sql";
@@ -14,9 +14,9 @@ p_db: ?*c.sqlite3,
 
 pub const OpenError = utils.ReadFileZError || error{ OpenFailed, SchemaExecFailed };
 
-pub fn open(a: Allocator, file_name: [:0]const u8) OpenError!Conn {
-    const schema_str: [:0]const u8 = try utils.readFileZ(a, path_db_schema);
-    defer a.free(schema_str);
+pub fn open(file_name: [:0]const u8) OpenError!Conn {
+    const schema_str: [:0]const u8 = try utils.readFileZ(mem.a, path_db_schema);
+    defer mem.a.free(schema_str);
 
     log.info("SQLite v{s}", .{c.sqlite3_libversion()});
 
@@ -50,13 +50,13 @@ pub fn open(a: Allocator, file_name: [:0]const u8) OpenError!Conn {
 
 pub const CloseError = error{CloseFailed};
 
-pub fn close(self: Conn) CloseError!void {
+// Q: Do I have to free the err_msg here?
+pub fn close(self: Conn) void {
     if (c.SQLITE_OK != c.sqlite3_close(self.p_db)) {
         log.err(
             "Error closing the database: {s}",
             .{c.sqlite3_errmsg(self.p_db)},
         );
-        return error.CloseFailed;
     }
 
     log.info("Closed the database", .{});

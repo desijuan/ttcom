@@ -1,8 +1,9 @@
 const std = @import("std");
-const Allocator = std.mem.Allocator;
 const log = std.log;
 
 const c = @import("../c.zig").sqlite3;
+
+const mem = @import("../mem.zig");
 
 const Conn = @import("db/Conn.zig");
 const columnSlice = Conn.columnSlice;
@@ -15,15 +16,15 @@ push_port: u16,
 push_freq_s: u32,
 timeout_s: u32,
 
-pub fn destroy(self: *Settings, a: Allocator) void {
-    a.free(self.log_file);
-    a.free(self.push_ip);
-    a.destroy(self);
+pub fn destroy(self: *Settings) void {
+    mem.a.free(self.log_file);
+    mem.a.free(self.push_ip);
+    mem.a.destroy(self);
 }
 
 pub const ReadFromConnError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
 
-pub fn readFromConn(a: Allocator, conn: Conn) ReadFromConnError!*Settings {
+pub fn readFromConn(conn: Conn) ReadFromConnError!*Settings {
     const sql = "SELECT log_file, push_ip, push_port, push_freq_s, timeout_s FROM settings";
 
     var stmt: ?*c.sqlite3_stmt = null;
@@ -42,12 +43,12 @@ pub fn readFromConn(a: Allocator, conn: Conn) ReadFromConnError!*Settings {
     }
 
     // Copy String
-    const log_file: [:0]const u8 = try a.dupeZ(u8, columnSlice(stmt, 0));
-    errdefer a.free(log_file);
+    const log_file: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 0));
+    errdefer mem.a.free(log_file);
 
     // Copy String
-    const push_ip: [:0]const u8 = try a.dupeZ(u8, columnSlice(stmt, 1));
-    errdefer a.free(push_ip);
+    const push_ip: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+    errdefer mem.a.free(push_ip);
 
     // Read Ints
     const push_port: u16 = std.math.cast(u16, c.sqlite3_column_int(stmt, 2)) orelse
@@ -58,8 +59,8 @@ pub fn readFromConn(a: Allocator, conn: Conn) ReadFromConnError!*Settings {
         return error.ValueOutOfRange;
 
     // Alloc
-    const settings: *Settings = try a.create(Settings);
-    errdefer a.destroy(settings);
+    const settings: *Settings = try mem.a.create(Settings);
+    errdefer mem.a.destroy(settings);
 
     // Write
     settings.* = Settings{

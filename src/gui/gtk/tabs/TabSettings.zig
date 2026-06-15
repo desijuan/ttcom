@@ -3,6 +3,8 @@ const log = std.log;
 
 const c = @import(".././../../c.zig").gtk;
 
+const mem = @import("../../../mem.zig");
+
 const App = @import("../App.zig");
 const Settings = @import("../../../model/Settings.zig");
 
@@ -31,7 +33,7 @@ pub fn create(app: *App) [*c]c.GtkWidget {
 
     // TODO: handle errors properly
     const settings: *Settings = app.readSettings() catch @panic("ReadSettingsError");
-    defer settings.destroy(app.a);
+    defer settings.destroy();
 
     // Fields
 

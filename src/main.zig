@@ -1,21 +1,19 @@
 const std = @import("std");
 const log = std.log;
 
+const mem = @import("mem.zig");
 const cfg = @import("config.zig");
 const Conn = @import("model/db/Conn.zig");
 const App = @import("gui/gtk/App.zig");
 
 pub fn main() (Conn.OpenError || App.CreateError)!void {
-    var da_inst = std.heap.DebugAllocator(.{ .safety = true }){};
-    defer log.debug("gpa: {}", .{da_inst.deinit()});
+    defer mem.a_deinit();
 
-    const da = da_inst.allocator();
+    const conn = try Conn.open(cfg.db_name);
+    defer conn.close();
 
-    const conn = try Conn.open(da, cfg.db_name);
-    defer conn.close() catch {};
-
-    const app = try App.create(da, conn);
-    defer app.destroy(da);
+    const app = try App.create(conn);
+    defer app.destroy();
 
     _ = app.run();
 }
