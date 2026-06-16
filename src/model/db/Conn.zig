@@ -59,8 +59,18 @@ pub fn close(self: Conn) void {
         );
     }
 
-    log.info("Closed the database", .{});
+    log.info("Database closed", .{});
 }
+
+/// The returned slice is valid only while the connection remains open.
+/// Memory is owned by SQLite. Do not free it.
+pub fn db_filename(self: Conn) [:0]const u8 {
+    const path = c.sqlite3_db_filename(self.p_db, "main");
+    const len = std.mem.len(path);
+    return path[0..len :0];
+}
+
+// --- Helpers ---
 
 pub fn columnSlice(stmt: ?*c.sqlite3_stmt, col: c_int) [:0]const u8 {
     const ptr = c.sqlite3_column_text(stmt, col) orelse return "null";

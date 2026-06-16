@@ -1,12 +1,12 @@
 const std = @import("std");
 const log = std.log;
 
-const c = @import(".././../../c.zig").gtk;
+const c = @import("./../../c.zig").gtk;
 
-const mem = @import("../../../mem.zig");
+const mem = @import("../../mem.zig");
 
-const App = @import("../App.zig");
-const Settings = @import("../../../model/Settings.zig");
+const App = @import("App.zig");
+const Settings = @import("../../model/Settings.zig");
 
 pub const label = "Settings";
 
@@ -32,7 +32,7 @@ pub fn create(app: *App) [*c]c.GtkWidget {
     var buf: [32:0]u8 = undefined;
 
     // TODO: handle errors properly
-    const settings: *Settings = app.readSettings() catch @panic("ReadSettingsError");
+    const settings: *const Settings = app.readSettings() catch @panic("ReadSettingsError");
     defer settings.destroy();
 
     // Fields

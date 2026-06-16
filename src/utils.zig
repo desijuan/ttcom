@@ -23,3 +23,11 @@ pub fn readFileZ(allocator: Allocator, path: []const u8) ReadFileZError![:0]cons
 
     return bytes[0..size :0];
 }
+
+pub fn getField(comptime T: type, comptime name: []const u8) ?std.builtin.StructField {
+    inline for (@typeInfo(T).@"struct".fields) |field| {
+        if (std.mem.eql(u8, field.name, name))
+            return field;
+    }
+    return null;
+}

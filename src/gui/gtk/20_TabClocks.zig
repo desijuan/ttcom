@@ -1,6 +1,6 @@
-const c = @import("../../../c.zig").gtk;
+const c = @import("../../c.zig").gtk;
 
-const App = @import("../App.zig");
+const App = @import("App.zig");
 
 pub const label = "Clocks";
 

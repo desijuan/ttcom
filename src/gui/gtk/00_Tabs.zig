@@ -2,9 +2,9 @@ const c = @import("../../c.zig").gtk;
 
 const App = @import("App.zig");
 
-const TabLog = @import("tabs/TabLog.zig");
-const TabClocks = @import("tabs/TabClocks.zig");
-const TabSettings = @import("tabs/TabSettings.zig");
+const TabLog = @import("10_TabLog.zig");
+const TabClocks = @import("20_TabClocks.zig");
+const TabSettings = @import("30_TabSettings.zig");
 
 pub fn create(app: *App) [*c]c.GtkWidget {
     const notebook: [*c]c.GtkNotebook = @ptrCast(c.gtk_notebook_new());

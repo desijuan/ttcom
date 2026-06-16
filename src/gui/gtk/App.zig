@@ -7,11 +7,12 @@ const mem = @import("../../mem.zig");
 
 const Conn = @import("../../model/db/Conn.zig");
 const Settings = @import("../../model/Settings.zig");
+const Config = @import("../../Config.zig");
 
-const Tabs = @import("Tabs.zig");
-const StatusBar = @import("StatusBar.zig");
+const Tabs = @import("00_Tabs.zig");
+const StatusBar = @import("99_StatusBar.zig");
 
-const ConfigFields = struct {
+const SettingsFields = struct {
     log_file: [*c]c.GtkEntry = null,
     push_ip: [*c]c.GtkEntry = null,
     push_port: [*c]c.GtkEntry = null,
@@ -31,20 +32,21 @@ pub const Status = enum {
 
 const App = @This();
 
+cfg: Config,
 conn: Conn,
 gtk_app: [*c]c.GtkApplication,
-fields: ConfigFields = .{},
+fields: SettingsFields = .{},
 status: [*c]c.GtkLabel = null,
 
 pub const CreateError = error{OutOfMemory};
 
-pub fn create(conn: Conn) CreateError!*const App {
+pub fn create(cfg: Config, conn: Conn) CreateError!*const App {
     const gtk_app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage.ttcom", c.G_APPLICATION_DEFAULT_FLAGS);
 
     const app: *App = try mem.a.create(App);
     errdefer mem.a.destroy(app);
 
-    app.* = App{ .conn = conn, .gtk_app = gtk_app };
+    app.* = App{ .cfg = cfg, .conn = conn, .gtk_app = gtk_app };
 
     _ = c.g_signal_connect_data(gtk_app, "activate", @ptrCast(&activate), @ptrCast(app), null, 0);
 
@@ -78,7 +80,7 @@ fn activate(_: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
 
 pub const ReadSettingsError = Settings.ReadFromConnError;
 
-pub fn readSettings(self: App) ReadSettingsError!*Settings {
+pub fn readSettings(self: App) ReadSettingsError!*const Settings {
     return Settings.readFromConn(self.conn);
 }
 

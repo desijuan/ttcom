@@ -1,7 +1,8 @@
-const c = @import("../../../c.zig").gtk;
+const std = @import("std");
 
-const cfg = @import("../../../config.zig");
-const App = @import("../App.zig");
+const c = @import("../../c.zig").gtk;
+
+const App = @import("App.zig");
 
 pub const label = "Log";
 
@@ -20,7 +21,7 @@ fn log_append(log_buffer: [*c]c.GtkTextBuffer, log_view: [*c]c.GtkTextView, line
     c.gtk_text_view_scroll_mark_onscreen(@as(*c.GtkTextView, log_view), mark);
 }
 
-pub fn create(_: *App) *c.GtkWidget {
+pub fn create(app: *App) *c.GtkWidget {
     // Text view inside a scrolled window
     const scroll: [*c]c.GtkWidget = c.gtk_scrolled_window_new(null, null);
     c.gtk_scrolled_window_set_policy(
@@ -38,8 +39,13 @@ pub fn create(_: *App) *c.GtkWidget {
     c.gtk_text_view_set_left_margin(log_view, 3);
     c.gtk_text_view_set_monospace(log_view, 1);
 
+    var buf: [256]u8 = undefined;
+    const db_line: [:0]const u8 = std.fmt.bufPrintZ(&buf, "[INFO] Connected to database: {s}", .{
+        app.cfg.db_filename,
+    }) catch |err| @errorName(err);
+
     log_append(log_buffer, log_view, "[INFO] Application started");
-    log_append(log_buffer, log_view, "[INFO] Connected to database: " ++ cfg.db_name);
+    log_append(log_buffer, log_view, db_line);
     log_append(log_buffer, log_view, "[INFO] Polling interval: 5s");
     log_append(log_buffer, log_view, "[WARN] Clock 3 (Cancillería Estacionamiento) last seen 42s ago");
     log_append(log_buffer, log_view, "[INFO] Clock 1 (Cancillería Entrada Principal) synced OK");

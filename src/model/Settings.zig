@@ -16,7 +16,7 @@ push_port: u16,
 push_freq_s: u32,
 timeout_s: u32,
 
-pub fn destroy(self: *Settings) void {
+pub fn destroy(self: *const Settings) void {
     mem.a.free(self.log_file);
     mem.a.free(self.push_ip);
     mem.a.destroy(self);
@@ -24,7 +24,7 @@ pub fn destroy(self: *Settings) void {
 
 pub const ReadFromConnError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
 
-pub fn readFromConn(conn: Conn) ReadFromConnError!*Settings {
+pub fn readFromConn(conn: Conn) ReadFromConnError!*const Settings {
     const sql = "SELECT log_file, push_ip, push_port, push_freq_s, timeout_s FROM settings";
 
     var stmt: ?*c.sqlite3_stmt = null;

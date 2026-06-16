@@ -2,17 +2,20 @@ const std = @import("std");
 const log = std.log;
 
 const mem = @import("mem.zig");
-const cfg = @import("config.zig");
+const Config = @import("Config.zig");
 const Conn = @import("model/db/Conn.zig");
 const App = @import("gui/gtk/App.zig");
 
-pub fn main() (Conn.OpenError || App.CreateError)!void {
+pub fn main() (Config.ReadFromDiskError || Conn.OpenError || App.CreateError)!void {
     defer mem.a_deinit();
 
-    const conn = try Conn.open(cfg.db_name);
+    const cfg: Config = try Config.readFromDisk();
+    defer cfg.deinit();
+
+    const conn: Conn = try Conn.open(cfg.db_filename);
     defer conn.close();
 
-    const app = try App.create(conn);
+    const app: *const App = try App.create(cfg, conn);
     defer app.destroy();
 
     _ = app.run();
