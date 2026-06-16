@@ -78,8 +78,8 @@ pub const WriteToConnError = error{ PrepareFailed, BindFailed, StepFailed };
 
 pub fn writeToConn(self: Settings, conn: Conn) WriteToConnError!void {
     const sql =
-        \\UPDATE settings 
-        \\SET log_file=?, push_ip=?, push_port=?, push_freq_s=?, timeout_s=? 
+        \\UPDATE settings
+        \\SET log_file=?, push_ip=?, push_port=?, push_freq_s=?, timeout_s=?
         \\WHERE id = 1;
     ;
 
