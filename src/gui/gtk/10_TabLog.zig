@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const c = @import("../../c.zig").gtk;
+const c = @import("c.zig").gtk;
 
 const App = @import("App.zig");
 

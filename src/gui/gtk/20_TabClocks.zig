@@ -1,4 +1,9 @@
-const c = @import("../../c.zig").gtk;
+const std = @import("std");
+const log = std.log;
+
+const ClocksTree = @import("../../model/ClocksTree.zig");
+
+const c = @import("c.zig").gtk;
 
 const App = @import("App.zig");
 
@@ -6,7 +11,10 @@ pub const label = "Clocks";
 
 const NULL: ?*anyopaque = null;
 
-pub fn create(_: *App) *c.GtkWidget {
+pub fn create(app: *App) *c.GtkWidget {
+    const ct: ClocksTree = ClocksTree.get(app.conn) catch @panic("Merda!");
+    defer ct.free();
+
     const view: [*c]c.GtkTreeView = @ptrCast(c.gtk_tree_view_new());
     c.gtk_tree_view_set_enable_tree_lines(view, 1);
 
@@ -17,30 +25,43 @@ pub fn create(_: *App) *c.GtkWidget {
     _ = c.gtk_tree_view_insert_column_with_attributes(view, -1, "ip", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 1), NULL);
     _ = c.gtk_tree_view_insert_column_with_attributes(view, -1, "port", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 2), NULL);
 
-    var org_iter: c.GtkTreeIter = undefined;
-    var building_iter: c.GtkTreeIter = undefined;
-    var clock_iter: c.GtkTreeIter = undefined;
+    var iter_org: c.GtkTreeIter = undefined;
+    var iter_building: c.GtkTreeIter = undefined;
+    var iter_clock: c.GtkTreeIter = undefined;
 
-    c.gtk_tree_store_append(store, &org_iter, null);
-    c.gtk_tree_store_set(store, &org_iter, @as(c_int, 0), "Cancillería", @as(c_int, -1));
+    for (ct.b_orgs) |b_org| {
+        c.gtk_tree_store_append(store, &iter_org, null);
+        c.gtk_tree_store_set(store, &iter_org, @as(c_int, 0), b_org.org.name.ptr, @as(c_int, -1));
 
-    c.gtk_tree_store_append(store, &building_iter, &org_iter);
-    c.gtk_tree_store_set(store, &building_iter, @as(c_int, 0), "Edificio 1", @as(c_int, -1));
+        for (b_org.b_building) |b_building| {
+            c.gtk_tree_store_append(store, &iter_building, &iter_org);
+            c.gtk_tree_store_set(store, &iter_building, @as(c_int, 0), b_building.building.name.ptr, @as(c_int, -1));
 
-    c.gtk_tree_store_append(store, &clock_iter, &building_iter);
-    c.gtk_tree_store_set(store, &clock_iter, @as(c_int, 0), "Entrada Principal", @as(c_int, 1), "82.254.138.246", @as(c_int, 2), "4277", @as(c_int, -1));
+            for (b_building.clocks) |clock| {
+                log.debug(
+                    \\clock.name: {s}
+                    \\       clock.ip  : {s}
+                    \\       clock.port: {d}
+                , .{ clock.name, clock.ip, clock.port });
 
-    c.gtk_tree_store_append(store, &clock_iter, &building_iter);
-    c.gtk_tree_store_set(store, &clock_iter, @as(c_int, 0), "Entrada Lateral", @as(c_int, 1), "80.171.133.247", @as(c_int, 2), "4271", @as(c_int, -1));
+                var buf: [8]u8 = undefined;
+                const clock_port: [:0]const u8 = std.fmt.bufPrintZ(&buf, "{d}", .{clock.port}) catch "error";
 
-    c.gtk_tree_store_append(store, &clock_iter, &building_iter);
-    c.gtk_tree_store_set(store, &clock_iter, @as(c_int, 0), "Estacionamiento", @as(c_int, 1), "70.95.11.51", @as(c_int, 2), "4270", @as(c_int, -1));
-
-    c.gtk_tree_store_append(store, &building_iter, &org_iter);
-    c.gtk_tree_store_set(store, &building_iter, @as(c_int, 0), "Edificio 2", @as(c_int, -1));
-
-    c.gtk_tree_store_append(store, &clock_iter, &building_iter);
-    c.gtk_tree_store_set(store, &clock_iter, @as(c_int, 0), "Entrada Única", @as(c_int, 1), "81.254.138.206", @as(c_int, 2), "4270", @as(c_int, -1));
+                c.gtk_tree_store_append(store, &iter_clock, &iter_building);
+                c.gtk_tree_store_set(
+                    store,
+                    &iter_clock,
+                    @as(c_int, 0),
+                    clock.name.ptr,
+                    @as(c_int, 1),
+                    clock.ip.ptr,
+                    @as(c_int, 2),
+                    clock_port.ptr,
+                    @as(c_int, -1),
+                );
+            }
+        }
+    }
 
     c.gtk_tree_view_expand_all(view);
 

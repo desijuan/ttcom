@@ -1,12 +1,12 @@
 const std = @import("std");
 const log = std.log;
 
-const c = @import("../../c.zig").gtk;
+const c = @import("c.zig").gtk;
 
 const mem = @import("../../mem.zig");
 
 const Conn = @import("../../model/db/Conn.zig");
-const Settings = @import("../../model/Settings.zig");
+const Settings = @import("../../model/db/Settings.zig");
 const Config = @import("../../Config.zig");
 
 const Tabs = @import("00_Tabs.zig");
@@ -78,15 +78,15 @@ fn activate(_: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
     c.gtk_widget_show_all(@ptrCast(window));
 }
 
-pub const ReadSettingsError = Settings.ReadFromConnError;
+pub const LoadSettingsError = Settings.ReadError;
 
-pub fn readSettings(self: App) ReadSettingsError!*const Settings {
-    return Settings.readFromConn(self.conn);
+pub fn loadSettings(self: App) LoadSettingsError!*const Settings {
+    return Settings.read(self.conn);
 }
 
-pub const WriteSettingsError = std.fmt.ParseIntError || Settings.WriteToConnError;
+pub const SaveSettingsError = std.fmt.ParseIntError || Settings.WriteError;
 
-pub fn writeSettings(self: App) WriteSettingsError!void {
+pub fn saveSettings(self: App) SaveSettingsError!void {
     const log_file: [:0]const u8 = gtkEntryGetText(self.fields.log_file);
     const push_ip: [:0]const u8 = gtkEntryGetText(self.fields.push_ip);
     const push_port: u16 = try std.fmt.parseInt(u16, gtkEntryGetText(self.fields.push_port), 10);
@@ -101,7 +101,7 @@ pub fn writeSettings(self: App) WriteSettingsError!void {
         .timeout_s = timeout_s,
     };
 
-    try settings.writeToConn(self.conn);
+    try settings.write(self.conn);
 }
 
 pub fn setStatus(self: App, status: Status) void {

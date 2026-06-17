@@ -15,17 +15,17 @@ CREATE TABLE IF NOT EXISTS orgs (
 );
 
 CREATE TABLE IF NOT EXISTS buildings (
-    id      INTEGER PRIMARY KEY,
-    address TEXT    NOT NULL,
-    org_id  INTEGER,
+    id     INTEGER PRIMARY KEY,
+    name   TEXT    NOT NULL,
+    org_id INTEGER,
     FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS clocks (
-    id     INTEGER PRIMARY KEY,
-    name   TEXT    NOT NULL,
-    ip     TEXT    NOT NULL,
-    port   INTEGER NOT NULL,
-    bld_id INTEGER NOT NULL,
-    FOREIGN KEY (bld_id) REFERENCES buildings(id) ON DELETE CASCADE
+    id          INTEGER PRIMARY KEY,
+    name        TEXT    NOT NULL,
+    ip          TEXT    NOT NULL,
+    port        INTEGER NOT NULL,
+    building_id INTEGER NOT NULL,
+    FOREIGN KEY (building_id) REFERENCES buildings(id) ON DELETE CASCADE
 );

@@ -1,7 +1,7 @@
 const std = @import("std");
 const log = std.log;
 
-const c = @import("../../c.zig").sqlite3;
+const c = @import("c.zig").sqlite3;
 
 const mem = @import("../../mem.zig");
 const utils = @import("../../utils.zig");

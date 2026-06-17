@@ -1,11 +1,11 @@
 const std = @import("std");
 const log = std.log;
 
-const c = @import("../c.zig").sqlite3;
+const c = @import("c.zig").sqlite3;
 
-const mem = @import("../mem.zig");
+const mem = @import("../../mem.zig");
 
-const Conn = @import("db/Conn.zig");
+const Conn = @import("Conn.zig");
 const columnSlice = Conn.columnSlice;
 
 const Settings = @This();
@@ -22,9 +22,9 @@ pub fn destroy(self: *const Settings) void {
     mem.a.destroy(self);
 }
 
-pub const ReadFromConnError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
+pub const ReadError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
 
-pub fn readFromConn(conn: Conn) ReadFromConnError!*const Settings {
+pub fn read(conn: Conn) ReadError!*const Settings {
     const sql = "SELECT log_file, push_ip, push_port, push_freq_s, timeout_s FROM settings";
 
     var stmt: ?*c.sqlite3_stmt = null;
@@ -74,9 +74,9 @@ pub fn readFromConn(conn: Conn) ReadFromConnError!*const Settings {
     return settings;
 }
 
-pub const WriteToConnError = error{ PrepareFailed, BindFailed, StepFailed };
+pub const WriteError = error{ PrepareFailed, BindFailed, StepFailed };
 
-pub fn writeToConn(self: Settings, conn: Conn) WriteToConnError!void {
+pub fn write(self: Settings, conn: Conn) WriteError!void {
     const sql =
         \\UPDATE settings
         \\SET log_file=?, push_ip=?, push_port=?, push_freq_s=?, timeout_s=?
