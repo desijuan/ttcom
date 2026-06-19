@@ -7,7 +7,7 @@ const Config = @This();
 
 db_filename: [:0]const u8 = "db.sqlite",
 
-pub const ReadFromDiskError = error{OutOfMemory} || utils.ReadFileZError || error{ParseZon};
+pub const ReadFromDiskError = utils.ReadFileZError || error{ParseZon};
 
 pub fn readFromDisk() ReadFromDiskError!Config {
     const cfg_def = Config{};

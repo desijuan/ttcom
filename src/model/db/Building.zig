@@ -15,7 +15,7 @@ org_id: i32,
 id: i32,
 name: [:0]const u8,
 
-pub fn free(self: *const Building) void {
+pub fn deinit(self: *const Building) void {
     mem.a.free(self.name);
 }
 

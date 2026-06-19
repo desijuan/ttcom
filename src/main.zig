@@ -17,7 +17,7 @@ pub fn main() (Config.ReadFromDiskError || Conn.OpenError || Conn.ExecSchemaErro
 
     try conn.execSchema();
 
-    const app: *const App = try App.create(cfg, conn);
+    const app: *const App = try App.new(cfg, conn);
     defer app.destroy();
 
     _ = app.run();

@@ -14,7 +14,7 @@ const Org = @This();
 id: i32,
 name: [:0]const u8,
 
-pub fn free(self: *const Org) void {
+pub fn deinit(self: *const Org) void {
     mem.a.free(self.name);
 }
 

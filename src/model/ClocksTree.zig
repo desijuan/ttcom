@@ -23,25 +23,25 @@ const ClocksTree = @This();
 
 b_orgs: []const OrgBranch,
 
-pub fn free(self: ClocksTree) void {
+pub fn destroy(self: ClocksTree) void {
     for (self.b_orgs) |b_org| {
         for (b_org.b_building) |b_building| {
-            for (b_building.clocks) |clock| clock.free();
+            for (b_building.clocks) |clock| clock.deinit();
 
             mem.a.free(b_building.clocks);
-            b_building.building.free();
+            b_building.building.deinit();
         }
 
         mem.a.free(b_org.b_building);
-        b_org.org.free();
+        b_org.org.deinit();
     }
 
     mem.a.free(self.b_orgs);
 }
 
-pub const GetError = error{ OutOfMemory, PrepareFailed, BindFailed, StepFailed };
+pub const ReadError = error{ OutOfMemory, PrepareFailed, BindFailed, StepFailed, CastFailed };
 
-pub fn get(conn: Conn) GetError!ClocksTree {
+pub fn read(conn: Conn) ReadError!ClocksTree {
     const orgs: []const Org = try Org.getAll(conn);
     defer mem.a.free(orgs);
 

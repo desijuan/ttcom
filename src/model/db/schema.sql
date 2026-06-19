@@ -9,15 +9,18 @@ CREATE TABLE IF NOT EXISTS settings (
     timeout_s   INTEGER NOT NULL
 );
 
+INSERT OR IGNORE INTO settings (id, log_file, push_ip, push_port, push_freq_s, timeout_s)
+VALUES (1, 'log.txt', '192.160.0.107', 4720, 60, 90);
+
 CREATE TABLE IF NOT EXISTS orgs (
-    id         INTEGER PRIMARY KEY,
-    name       TEXT    NOT NULL
+    id   INTEGER PRIMARY KEY,
+    name TEXT    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS buildings (
-    id     INTEGER PRIMARY KEY,
-    name   TEXT    NOT NULL,
-    org_id INTEGER,
+    id      INTEGER PRIMARY KEY,
+    name    TEXT    NOT NULL,
+    org_id  INTEGER,
     FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE SET NULL
 );
 

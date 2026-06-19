@@ -14,10 +14,10 @@ const Clock = @This();
 building_id: i32,
 id: i32,
 name: [:0]const u8,
-ip: [:0]const u8,
+ip: [:0]const u8, // TODO: Store ip as [4]u8 ?
 port: u16,
 
-pub fn free(self: *const Clock) void {
+pub fn deinit(self: *const Clock) void {
     mem.a.free(self.name);
     mem.a.free(self.ip);
 }
@@ -69,6 +69,8 @@ pub fn getAll(conn: Conn) GetAllError![]const Clock {
     return list.toOwnedSlice(mem.a);
 }
 
+pub const FindByBuildingIdError = error{ OutOfMemory, PrepareFailed, StepFailed, CastFailed };
+
 pub fn findByBuildingId(building_id: c_int, conn: Conn) ![]const Clock {
     const sql = "SELECT id, name, ip, port FROM clocks WHERE building_id  = ?";
 
@@ -102,14 +104,15 @@ pub fn findByBuildingId(building_id: c_int, conn: Conn) ![]const Clock {
         const ip: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 2));
         errdefer mem.a.free(ip);
 
-        const port: c_int = c.sqlite3_column_int(stmt, 3);
+        const port: u16 = std.math.cast(u16, c.sqlite3_column_int(stmt, 3)) orelse
+            return error.CastFailed;
 
         try list.append(mem.a, Clock{
             .building_id = building_id,
             .id = id,
             .name = name,
             .ip = ip,
-            .port = @intCast(port), // TODO: Revisar este cast. Puede panickear.
+            .port = port,
         });
     } else if (rc != c.SQLITE_DONE) {
         std.log.err("Error stepping statement\n{s}\n{s}", .{ sql, c.sqlite3_errmsg(conn.p_db) });

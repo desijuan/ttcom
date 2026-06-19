@@ -8,6 +8,7 @@ const mem = @import("../../mem.zig");
 const Conn = @import("../../model/db/Conn.zig");
 const Settings = @import("../../model/db/Settings.zig");
 const Config = @import("../../Config.zig");
+const ClocksTree = @import("../../model/ClocksTree.zig");
 
 const Tabs = @import("00_Tabs.zig");
 const StatusBar = @import("99_StatusBar.zig");
@@ -21,7 +22,7 @@ const SettingsFields = struct {
 };
 
 pub const Status = enum {
-    Idle,
+    Loading,
     Ready,
     Error,
 
@@ -40,7 +41,7 @@ status: [*c]c.GtkLabel = null,
 
 pub const CreateError = error{OutOfMemory};
 
-pub fn create(cfg: Config, conn: Conn) CreateError!*const App {
+pub fn new(cfg: Config, conn: Conn) CreateError!*const App {
     const gtk_app: [*c]c.GtkApplication = c.gtk_application_new("ar.com.sage.ttcom", c.G_APPLICATION_DEFAULT_FLAGS);
 
     const app: *App = try mem.a.create(App);
@@ -54,28 +55,40 @@ pub fn create(cfg: Config, conn: Conn) CreateError!*const App {
 }
 
 pub fn destroy(self: *const App) void {
+    c.g_object_unref(self.gtk_app);
     mem.a.destroy(self);
 }
 
 pub fn run(self: App) c_int {
-    defer c.g_object_unref(self.gtk_app);
     return c.g_application_run(@ptrCast(self.gtk_app), 0, null);
 }
 
-fn activate(_: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
+fn activate(gtk_app: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
     const app: *App = @ptrCast(@alignCast(data));
 
-    const window: [*c]c.GtkWindow = @ptrCast(c.gtk_application_window_new(app.gtk_app));
+    const window: [*c]c.GtkWindow = @ptrCast(c.gtk_application_window_new(gtk_app));
     c.gtk_window_set_default_size(window, 640, 480);
     c.gtk_window_set_position(window, c.GTK_WIN_POS_CENTER);
     c.gtk_window_set_title(window, "ttcom");
 
     const root_vbox: [*c]c.GtkBox = @ptrCast(c.gtk_box_new(c.GTK_ORIENTATION_VERTICAL, 0));
-    c.gtk_box_pack_start(root_vbox, Tabs.create(app), 1, 1, 0);
     c.gtk_box_pack_end(root_vbox, StatusBar.create(app), 0, 0, 0);
+    c.gtk_box_pack_start(root_vbox, Tabs.create(app), 1, 1, 0);
     c.gtk_container_add(@ptrCast(window), @ptrCast(root_vbox));
 
     c.gtk_widget_show_all(@ptrCast(window));
+
+    app.setStatus(.Ready);
+}
+
+pub fn setStatus(self: App, status: Status) void {
+    c.gtk_label_set_text(self.status, status.tagName());
+}
+
+pub const LoadClocksTreeError = ClocksTree.ReadError;
+
+pub fn loadClocksTree(self: App) LoadClocksTreeError!ClocksTree {
+    return ClocksTree.read(self.conn);
 }
 
 pub const LoadSettingsError = Settings.ReadError;
@@ -104,19 +117,9 @@ pub fn saveSettings(self: App) SaveSettingsError!void {
     try settings.write(self.conn);
 }
 
-pub fn setStatus(self: App, status: Status) void {
-    c.gtk_label_set_text(self.status, status.tagName());
-}
-
 // --- Helpers ---
 
 fn gtkEntryGetText(entry: [*c]c.GtkEntry) [:0]const u8 {
     const len = c.gtk_entry_get_text_length(entry);
     return c.gtk_entry_get_text(entry)[0..len :0];
-}
-
-fn gtkEntryGetInt(comptime T: type, entry: [*c]c.GtkEnytry) T {
-    const len = c.gtk_entry_get_text_length(entry);
-    const text: [:0]const u8 = c.gtk_entry_get_text(entry)[0..len :0];
-    return std.fmt.parseInt(T, text, 10);
 }

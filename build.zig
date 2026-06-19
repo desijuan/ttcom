@@ -8,7 +8,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
-        .link_libc = false,
+        .link_libc = true,
     });
 
     const exe = b.addExecutable(.{
@@ -33,7 +33,6 @@ pub fn build(b: *std.Build) void {
     //
     // - GTK 3 -
     //
-    root_mod.linkSystemLibrary("c", .{});
     root_mod.linkSystemLibrary("gtk+-3.0", .{ .use_pkg_config = .force });
 
     b.installArtifact(exe);

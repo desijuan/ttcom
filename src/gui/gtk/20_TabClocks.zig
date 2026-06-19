@@ -12,13 +12,20 @@ pub const label = "Clocks";
 const NULL: ?*anyopaque = null;
 
 pub fn create(app: *App) *c.GtkWidget {
-    const ct: ClocksTree = ClocksTree.get(app.conn) catch @panic("Merda!");
-    defer ct.free();
+    const ct: ClocksTree = app.loadClocksTree() catch |err| {
+        app.setStatus(.Error);
+        log.err("Unable to load ClocksTree: {t}", .{err});
+        // TODO: Switch to this tab. Call Gtk.Notebook.set_current_page.
+        return c.gtk_label_new("Unable to load Clocks");
+    };
+    defer ct.destroy();
 
     const view: [*c]c.GtkTreeView = @ptrCast(c.gtk_tree_view_new());
     c.gtk_tree_view_set_enable_tree_lines(view, 1);
 
     const store: [*c]c.GtkTreeStore = c.gtk_tree_store_new(3, c.G_TYPE_STRING, c.G_TYPE_STRING, c.G_TYPE_STRING);
+    defer c.g_object_unref(store);
+
     c.gtk_tree_view_set_model(view, @ptrCast(store));
 
     _ = c.gtk_tree_view_insert_column_with_attributes(view, -1, "clock", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 0), NULL);
@@ -64,13 +71,6 @@ pub fn create(app: *App) *c.GtkWidget {
     }
 
     c.gtk_tree_view_expand_all(view);
-
-    // --- Q: Is this necessary? ---
-    //
-    // The tree view has acquired its own reference to the
-    //  model, so we can drop ours. That way the model will
-    //  be freed automatically when the tree view is destroyed
-    c.g_object_unref(store);
 
     return @ptrCast(view);
 }
