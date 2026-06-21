@@ -36,8 +36,11 @@ const App = @This();
 cfg: Config,
 conn: Conn,
 gtk_app: [*c]c.GtkApplication,
-fields: SettingsFields = .{},
-status: [*c]c.GtkLabel = null,
+status: Status = .Ready,
+current_page: c_int = -1,
+notebook: [*c]c.GtkNotebook = null,
+settings_fields: SettingsFields = .{},
+status_label: [*c]c.GtkLabel = null,
 
 pub const CreateError = error{OutOfMemory};
 
@@ -78,11 +81,27 @@ fn activate(gtk_app: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
 
     c.gtk_widget_show_all(@ptrCast(window));
 
-    app.setStatus(.Ready);
+    app.updateStatusLabel();
+    app.updateCurrentPage();
 }
 
-pub fn setStatus(self: App, status: Status) void {
-    c.gtk_label_set_text(self.status, status.tagName());
+pub fn setCurrentPage(self: *App, n: c_int) void {
+    self.current_page = n;
+}
+
+fn updateCurrentPage(self: *App) void {
+    if (self.current_page >= 0) {
+        c.gtk_notebook_set_current_page(self.notebook, self.current_page);
+        self.current_page = -1;
+    }
+}
+
+pub fn setStatus(self: *App, status: Status) void {
+    self.status = status;
+}
+
+fn updateStatusLabel(self: App) void {
+    c.gtk_label_set_text(self.status_label, self.status.tagName());
 }
 
 pub const LoadClocksTreeError = ClocksTree.ReadError;
@@ -100,11 +119,11 @@ pub fn loadSettings(self: App) LoadSettingsError!*const Settings {
 pub const SaveSettingsError = std.fmt.ParseIntError || Settings.WriteError;
 
 pub fn saveSettings(self: App) SaveSettingsError!void {
-    const log_file: [:0]const u8 = gtkEntryGetText(self.fields.log_file);
-    const push_ip: [:0]const u8 = gtkEntryGetText(self.fields.push_ip);
-    const push_port: u16 = try std.fmt.parseInt(u16, gtkEntryGetText(self.fields.push_port), 10);
-    const push_freq_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.fields.push_freq_s), 10);
-    const timeout_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.fields.timeout_s), 10);
+    const log_file: [:0]const u8 = gtkEntryGetText(self.settings_fields.log_file);
+    const push_ip: [:0]const u8 = gtkEntryGetText(self.settings_fields.push_ip);
+    const push_port: u16 = try std.fmt.parseInt(u16, gtkEntryGetText(self.settings_fields.push_port), 10);
+    const push_freq_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_fields.push_freq_s), 10);
+    const timeout_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_fields.timeout_s), 10);
 
     const settings: Settings = .{
         .log_file = log_file,

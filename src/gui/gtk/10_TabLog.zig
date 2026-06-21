@@ -4,6 +4,7 @@ const c = @import("c.zig").gtk;
 
 const App = @import("App.zig");
 
+pub const idx = 0;
 pub const label = "Log";
 
 fn log_append(log_buffer: [*c]c.GtkTextBuffer, log_view: [*c]c.GtkTextView, line: [:0]const u8) void {
@@ -58,6 +59,6 @@ pub fn create(app: *App) *c.GtkWidget {
     return scroll;
 }
 
-pub fn create_label() *c.GtkWidget {
+pub fn createLabel() *c.GtkWidget {
     return c.gtk_label_new(label);
 }

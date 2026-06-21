@@ -7,15 +7,16 @@ const c = @import("c.zig").gtk;
 
 const App = @import("App.zig");
 
+pub const idx = 1;
 pub const label = "Clocks";
 
 const NULL: ?*anyopaque = null;
 
 pub fn create(app: *App) *c.GtkWidget {
     const ct: ClocksTree = app.loadClocksTree() catch |err| {
-        app.setStatus(.Error);
         log.err("Unable to load ClocksTree: {t}", .{err});
-        // TODO: Switch to this tab. Call Gtk.Notebook.set_current_page.
+        app.setStatus(.Error);
+        app.setCurrentPage(idx);
         return c.gtk_label_new("Unable to load Clocks");
     };
     defer ct.destroy();
@@ -75,6 +76,6 @@ pub fn create(app: *App) *c.GtkWidget {
     return @ptrCast(view);
 }
 
-pub fn create_label() *c.GtkWidget {
+pub fn createLabel() *c.GtkWidget {
     return c.gtk_label_new(label);
 }

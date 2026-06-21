@@ -8,6 +8,7 @@ const mem = @import("../../mem.zig");
 const App = @import("App.zig");
 const Settings = @import("../../model/db/Settings.zig");
 
+pub const idx = 2;
 pub const label = "Settings";
 
 const w_field = 130;
@@ -30,38 +31,38 @@ fn row(label_text: [:0]const u8, field: [*c]c.GtkWidget, extra: ?[*c]c.GtkWidget
 
 pub fn create(app: *App) [*c]c.GtkWidget {
     const settings: *const Settings = app.loadSettings() catch |err| {
-        app.setStatus(.Error);
         log.err("Unable to load Settings: {t}", .{err});
-        // TODO: Switch to this tab. Call Gtk.Notebook.set_current_page.
+        app.setStatus(.Error);
+        app.setCurrentPage(idx);
         return c.gtk_label_new("Unable to load settings");
     };
     defer settings.destroy();
 
     // Fields
-    app.fields.log_file = @ptrCast(c.gtk_entry_new());
-    app.fields.push_ip = @ptrCast(c.gtk_entry_new());
-    app.fields.push_port = @ptrCast(c.gtk_entry_new());
-    app.fields.push_freq_s = @ptrCast(c.gtk_entry_new());
-    app.fields.timeout_s = @ptrCast(c.gtk_entry_new());
+    app.settings_fields.log_file = @ptrCast(c.gtk_entry_new());
+    app.settings_fields.push_ip = @ptrCast(c.gtk_entry_new());
+    app.settings_fields.push_port = @ptrCast(c.gtk_entry_new());
+    app.settings_fields.push_freq_s = @ptrCast(c.gtk_entry_new());
+    app.settings_fields.timeout_s = @ptrCast(c.gtk_entry_new());
 
     var buf: [12:0]u8 = undefined;
 
-    c.gtk_entry_set_text(app.fields.log_file, settings.log_file);
-    c.gtk_entry_set_text(app.fields.push_ip, settings.push_ip);
+    c.gtk_entry_set_text(app.settings_fields.log_file, settings.log_file);
+    c.gtk_entry_set_text(app.settings_fields.push_ip, settings.push_ip);
     c.gtk_entry_set_text(
-        app.fields.push_port,
+        app.settings_fields.push_port,
         std.fmt.bufPrintZ(&buf, "{d}", .{settings.push_port}) catch unreachable,
     );
     c.gtk_entry_set_text(
-        app.fields.push_freq_s,
+        app.settings_fields.push_freq_s,
         std.fmt.bufPrintZ(&buf, "{d}", .{settings.push_freq_s}) catch unreachable,
     );
-    c.gtk_widget_set_size_request(@ptrCast(app.fields.push_freq_s), w_field, -1);
+    c.gtk_widget_set_size_request(@ptrCast(app.settings_fields.push_freq_s), w_field, -1);
     c.gtk_entry_set_text(
-        app.fields.timeout_s,
+        app.settings_fields.timeout_s,
         std.fmt.bufPrintZ(&buf, "{d}", .{settings.timeout_s}) catch unreachable,
     );
-    c.gtk_widget_set_size_request(@ptrCast(app.fields.timeout_s), w_field, -1);
+    c.gtk_widget_set_size_request(@ptrCast(app.settings_fields.timeout_s), w_field, -1);
 
     // Browse button
     const btn_browse = c.gtk_button_new_with_label("Browse…");
@@ -82,18 +83,18 @@ pub fn create(app: *App) [*c]c.GtkWidget {
     c.gtk_widget_set_margin_top(vbox, 60);
     c.gtk_widget_set_margin_bottom(vbox, 45);
 
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Log File:", @ptrCast(app.fields.log_file), btn_browse), 0, 0, 0);
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Push IP:", @ptrCast(app.fields.push_ip), null), 0, 0, 0);
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Push port:", @ptrCast(app.fields.push_port), null), 0, 0, 0);
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Push Frequency:", @ptrCast(app.fields.push_freq_s), c.gtk_label_new("seconds")), 0, 0, 0);
-    c.gtk_box_pack_start(@ptrCast(vbox), row("Timeout:", @ptrCast(app.fields.timeout_s), c.gtk_label_new("seconds")), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Log File:", @ptrCast(app.settings_fields.log_file), btn_browse), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Push IP:", @ptrCast(app.settings_fields.push_ip), null), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Push port:", @ptrCast(app.settings_fields.push_port), null), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Push Frequency:", @ptrCast(app.settings_fields.push_freq_s), c.gtk_label_new("seconds")), 0, 0, 0);
+    c.gtk_box_pack_start(@ptrCast(vbox), row("Timeout:", @ptrCast(app.settings_fields.timeout_s), c.gtk_label_new("seconds")), 0, 0, 0);
 
     c.gtk_box_pack_end(@ptrCast(vbox), btn_save, 0, 0, 0);
 
     return vbox;
 }
 
-pub fn create_label() *c.GtkWidget {
+pub fn createLabel() *c.GtkWidget {
     return c.gtk_label_new(label);
 }
 
@@ -102,7 +103,7 @@ fn clicked_on_browse(_: [*c]c.GtkButton, _: c.gpointer) callconv(.c) void {
 }
 
 fn clicked_on_save(_: [*c]c.GtkButton, data: c.gpointer) callconv(.c) void {
-    const app: *const App = @ptrCast(@alignCast(data));
+    const app: *App = @ptrCast(@alignCast(data));
     app.saveSettings() catch |err| {
         app.setStatus(.Error);
         log.err("Unable to save Settings: {t}", .{err});

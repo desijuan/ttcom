@@ -1,3 +1,6 @@
+const std = @import("std");
+const log = std.log;
+
 const c = @import("c.zig").gtk;
 
 const App = @import("App.zig");
@@ -8,16 +11,18 @@ const TabSettings = @import("30_TabSettings.zig");
 
 pub fn create(app: *App) [*c]c.GtkWidget {
     const notebook: [*c]c.GtkNotebook = @ptrCast(c.gtk_notebook_new());
+    app.notebook = notebook;
 
-    n_append_page(notebook, app, TabLog);
-    n_append_page(notebook, app, TabClocks);
-    n_append_page(notebook, app, TabSettings);
+    if (-1 == c.gtk_notebook_insert_page(notebook, TabLog.create(app), TabLog.createLabel(), TabLog.idx) or
+        -1 == c.gtk_notebook_insert_page(notebook, TabClocks.create(app), TabClocks.createLabel(), TabClocks.idx) or
+        -1 == c.gtk_notebook_insert_page(notebook, TabSettings.create(app), TabSettings.createLabel(), TabSettings.idx))
+    {
+        app.setStatus(.Error);
+        log.err("gtk_notebook_insert_page failed", .{});
+        return c.gtk_label_new("Unable to initialize tabs");
+    }
 
     c.gtk_widget_set_vexpand(@ptrCast(notebook), 1);
 
     return @ptrCast(notebook);
-}
-
-fn n_append_page(notebook: [*c]c.GtkNotebook, app: *App, comptime Tab: type) void {
-    _ = c.gtk_notebook_append_page(notebook, Tab.create(app), Tab.create_label());
 }

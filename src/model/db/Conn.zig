@@ -35,8 +35,6 @@ pub fn open(file_name: [:0]const u8) OpenError!Conn {
     return Conn{ .p_db = p_db };
 }
 
-pub const CloseError = error{CloseFailed};
-
 pub fn close(self: Conn) void {
     if (c.SQLITE_OK != c.sqlite3_close(self.p_db)) {
         log.err(
@@ -65,8 +63,8 @@ pub fn execSchema(self: Conn) ExecSchemaError!void {
 /// The returned slice is valid only while the connection remains open.
 /// Memory is owned by SQLite. Do not free it.
 pub fn db_filename(self: Conn) [:0]const u8 {
-    const path = c.sqlite3_db_filename(self.p_db, "main");
-    const len = std.mem.len(path);
+    const path: [*c]const u8 = c.sqlite3_db_filename(self.p_db, "main");
+    const len: usize = std.mem.len(path);
     return path[0..len :0];
 }
 

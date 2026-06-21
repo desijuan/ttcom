@@ -9,7 +9,7 @@ pub fn create(app: *App) [*c]c.GtkWidget {
     c.gtk_widget_set_margin_top(status_label, 1);
     c.gtk_widget_set_margin_bottom(status_label, 1);
 
-    app.status = @ptrCast(status_label);
+    app.status_label = @ptrCast(status_label);
 
     return status_label;
 }
