@@ -47,7 +47,7 @@ pub fn create(app: *App) *c.GtkWidget {
 
     log_append(log_buffer, log_view, "[INFO] Application started");
     log_append(log_buffer, log_view, db_line);
-    log_append(log_buffer, log_view, "[INFO] Polling interval: 5s");
+    log_append(log_buffer, log_view, "[INFO] Polling interval: 60s");
     log_append(log_buffer, log_view, "[WARN] Clock 3 (Cancillería Estacionamiento) last seen 42s ago");
     log_append(log_buffer, log_view, "[INFO] Clock 1 (Cancillería Entrada Principal) synced OK");
     log_append(log_buffer, log_view, "[INFO] Clock 2 (Cancillería Entrada Lateral) synced OK");

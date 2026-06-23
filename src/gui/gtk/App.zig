@@ -13,7 +13,7 @@ const ClocksTree = @import("../../model/ClocksTree.zig");
 const Tabs = @import("00_Tabs.zig");
 const StatusBar = @import("99_StatusBar.zig");
 
-const SettingsFields = struct {
+const SettingsEntries = struct {
     log_file: [*c]c.GtkEntry = null,
     push_ip: [*c]c.GtkEntry = null,
     push_port: [*c]c.GtkEntry = null,
@@ -39,7 +39,7 @@ gtk_app: [*c]c.GtkApplication,
 status: Status = .Ready,
 current_page: c_int = -1,
 notebook: [*c]c.GtkNotebook = null,
-settings_fields: SettingsFields = .{},
+settings_entries: SettingsEntries = .{},
 status_label: [*c]c.GtkLabel = null,
 
 pub const CreateError = error{OutOfMemory};
@@ -119,11 +119,11 @@ pub fn loadSettings(self: App) LoadSettingsError!*const Settings {
 pub const SaveSettingsError = std.fmt.ParseIntError || Settings.WriteError;
 
 pub fn saveSettings(self: App) SaveSettingsError!void {
-    const log_file: [:0]const u8 = gtkEntryGetText(self.settings_fields.log_file);
-    const push_ip: [:0]const u8 = gtkEntryGetText(self.settings_fields.push_ip);
-    const push_port: u16 = try std.fmt.parseInt(u16, gtkEntryGetText(self.settings_fields.push_port), 10);
-    const push_freq_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_fields.push_freq_s), 10);
-    const timeout_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_fields.timeout_s), 10);
+    const log_file: [:0]const u8 = gtkEntryGetText(self.settings_entries.log_file);
+    const push_ip: [:0]const u8 = gtkEntryGetText(self.settings_entries.push_ip);
+    const push_port: u16 = try std.fmt.parseInt(u16, gtkEntryGetText(self.settings_entries.push_port), 10);
+    const push_freq_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_entries.push_freq_s), 10);
+    const timeout_s: u32 = try std.fmt.parseInt(u32, gtkEntryGetText(self.settings_entries.timeout_s), 10);
 
     const settings: Settings = .{
         .log_file = log_file,

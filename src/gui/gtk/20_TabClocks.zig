@@ -53,7 +53,7 @@ pub fn create(app: *App) *c.GtkWidget {
                 , .{ clock.name, clock.ip, clock.port });
 
                 var buf: [8]u8 = undefined;
-                const clock_port: [:0]const u8 = std.fmt.bufPrintZ(&buf, "{d}", .{clock.port}) catch "error";
+                const clock_port: [:0]const u8 = std.fmt.bufPrintZ(&buf, "{d}", .{clock.port}) catch unreachable;
 
                 c.gtk_tree_store_append(store, &iter_clock, &iter_building);
                 c.gtk_tree_store_set(
