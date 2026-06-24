@@ -7,7 +7,6 @@ const c = @import("c.zig").sqlite3;
 const mem = @import("../../mem.zig");
 
 const Conn = @import("Conn.zig");
-const columnSlice = Conn.columnSlice;
 
 const Clock = @This();
 
@@ -45,10 +44,10 @@ pub fn getAll(conn: Conn) GetAllError![]const Clock {
     while (rc == c.SQLITE_ROW) : (rc = c.sqlite3_step(stmt)) {
         const id: c_int = c.sqlite3_column_int(stmt, 0);
 
-        const name: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+        const name: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
         errdefer mem.a.free(name);
 
-        const ip: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 2));
+        const ip: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 2));
         errdefer mem.a.free(ip);
 
         const port: c_int = c.sqlite3_column_int(stmt, 3);
@@ -98,10 +97,10 @@ pub fn findByBuildingId(building_id: c_int, conn: Conn) ![]const Clock {
     while (rc == c.SQLITE_ROW) : (rc = c.sqlite3_step(stmt)) {
         const id: c_int = c.sqlite3_column_int(stmt, 0);
 
-        const name: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+        const name: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
         errdefer mem.a.free(name);
 
-        const ip: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 2));
+        const ip: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 2));
         errdefer mem.a.free(ip);
 
         const port: u16 = std.math.cast(u16, c.sqlite3_column_int(stmt, 3)) orelse

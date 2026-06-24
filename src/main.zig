@@ -6,7 +6,11 @@ const Config = @import("Config.zig");
 const Conn = @import("model/db/Conn.zig");
 const App = @import("gui/gtk/App.zig");
 
-pub fn main() (Config.ReadFromDiskError || Conn.OpenError || Conn.ExecSchemaError || App.CreateError)!void {
+const Error = Config.ReadFromDiskError ||
+    Conn.OpenError || Conn.ExecSchemaError ||
+    App.NewAppError;
+
+pub fn main() Error!void {
     defer mem.a_deinit();
 
     const cfg: Config = try Config.readFromDisk();

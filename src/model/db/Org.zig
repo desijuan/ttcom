@@ -7,7 +7,6 @@ const c = @import("c.zig").sqlite3;
 const mem = @import("../../mem.zig");
 
 const Conn = @import("Conn.zig");
-const columnSlice = Conn.columnSlice;
 
 const Org = @This();
 
@@ -41,7 +40,7 @@ pub fn getAll(conn: Conn) GetAllError![]const Org {
     while (rc == c.SQLITE_ROW) : (rc = c.sqlite3_step(stmt)) {
         const id: i32 = c.sqlite3_column_int(stmt, 0);
 
-        const name: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+        const name: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
         errdefer mem.a.free(name);
 
         try list.append(mem.a, Org{

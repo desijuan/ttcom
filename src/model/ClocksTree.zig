@@ -23,7 +23,7 @@ const ClocksTree = @This();
 
 b_orgs: []const OrgBranch,
 
-pub fn destroy(self: ClocksTree) void {
+pub fn deinit(self: ClocksTree) void {
     for (self.b_orgs) |b_org| {
         for (b_org.b_building) |b_building| {
             for (b_building.clocks) |clock| clock.deinit();

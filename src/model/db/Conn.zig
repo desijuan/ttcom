@@ -70,7 +70,7 @@ pub fn db_filename(self: Conn) [:0]const u8 {
 
 // --- Helpers ---
 
-pub fn columnSlice(stmt: ?*c.sqlite3_stmt, col: c_int) [:0]const u8 {
+pub fn getColumnSlice(stmt: ?*c.sqlite3_stmt, col: c_int) [:0]const u8 {
     const ptr = c.sqlite3_column_text(stmt, col) orelse return "null";
     const len: usize = @intCast(c.sqlite3_column_bytes(stmt, col));
     return ptr[0..len :0];

@@ -7,7 +7,6 @@ const c = @import("c.zig").sqlite3;
 const mem = @import("../../mem.zig");
 
 const Conn = @import("Conn.zig");
-const columnSlice = Conn.columnSlice;
 
 const Building = @This();
 
@@ -42,7 +41,7 @@ pub fn getAll(conn: Conn) GetAllError![]const Building {
     while (rc == c.SQLITE_ROW) : (rc = c.sqlite3_step(stmt)) {
         const id: c_int = c.sqlite3_column_int(stmt, 0);
 
-        const name: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+        const name: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
         errdefer mem.a.free(name);
 
         const org_id: c_int = c.sqlite3_column_int(stmt, 2);
@@ -89,7 +88,7 @@ pub fn findByOrgId(org_id: c_int, conn: Conn) FindByOrgIdError![]const Building 
     while (rc == c.SQLITE_ROW) : (rc = c.sqlite3_step(stmt)) {
         const id: c_int = c.sqlite3_column_int(stmt, 0);
 
-        const name: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+        const name: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
         errdefer mem.a.free(name);
 
         try list.append(mem.a, Building{

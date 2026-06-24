@@ -3,22 +3,21 @@ const log = std.log;
 
 const c = @import("c.zig").gtk;
 
-const ClocksTree = @import("../../model/ClocksTree.zig");
 const App = @import("App.zig");
+
+const ClocksTree = @import("../../model/ClocksTree.zig");
 
 pub const idx = 1;
 pub const label = "Clocks";
 
-const NULL: ?*anyopaque = null;
-
 pub fn create(app: *App) *c.GtkWidget {
-    const ct: ClocksTree = app.loadClocksTree() catch |err| {
+    const clocks_tree: ClocksTree = ClocksTree.read(app.conn) catch |err| {
         log.err("Unable to load ClocksTree: {t}", .{err});
-        app.setStatus(.Error);
-        app.setCurrentPage(idx);
+        app.status_bar.setStatus(.Error);
+        app.notebook.setCurrentPage(idx);
         return c.gtk_label_new("Unable to load Clocks");
     };
-    defer ct.destroy();
+    defer clocks_tree.deinit();
 
     const tree_view: [*c]c.GtkTreeView = @ptrCast(c.gtk_tree_view_new());
     c.gtk_tree_view_set_enable_tree_lines(tree_view, 1);
@@ -32,19 +31,19 @@ pub fn create(app: *App) *c.GtkWidget {
 
     _ = c.gtk_tree_view_insert_column_with_attributes(tree_view,
         -1, "clock", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 0),
-    NULL);
+    @as(?*anyopaque, null));
     _ = c.gtk_tree_view_insert_column_with_attributes(tree_view,
         -1, "ip", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 1),
-    NULL);
+    @as(?*anyopaque, null));
     _ = c.gtk_tree_view_insert_column_with_attributes(tree_view,
         -1, "port", c.gtk_cell_renderer_text_new(), "text", @as(c_int, 2),
-    NULL);
+    @as(?*anyopaque, null));
 
     var iter_org: c.GtkTreeIter = undefined;
     var iter_building: c.GtkTreeIter = undefined;
     var iter_clock: c.GtkTreeIter = undefined;
 
-    for (ct.b_orgs) |b_org| {
+    for (clocks_tree.b_orgs) |b_org| {
         c.gtk_tree_store_append(tree_store, &iter_org, null);
         c.gtk_tree_store_set(tree_store, &iter_org,
             @as(c_int, 0), b_org.org.name.ptr,

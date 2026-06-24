@@ -6,7 +6,6 @@ const c = @import("c.zig").sqlite3;
 const mem = @import("../../mem.zig");
 
 const Conn = @import("Conn.zig");
-const columnSlice = Conn.columnSlice;
 
 const Settings = @This();
 
@@ -16,15 +15,14 @@ push_port: u16,
 push_freq_s: u32,
 timeout_s: u32,
 
-pub fn destroy(self: *const Settings) void {
+pub fn deinit(self: Settings) void {
     mem.a.free(self.log_file);
     mem.a.free(self.push_ip);
-    mem.a.destroy(self);
 }
 
 pub const ReadError = error{ OutOfMemory, PrepareFailed, NoRows, ValueOutOfRange };
 
-pub fn read(conn: Conn) ReadError!*const Settings {
+pub fn read(conn: Conn) ReadError!Settings {
     const sql = "SELECT log_file, push_ip, push_port, push_freq_s, timeout_s FROM settings";
 
     var stmt: ?*c.sqlite3_stmt = null;
@@ -43,11 +41,11 @@ pub fn read(conn: Conn) ReadError!*const Settings {
     }
 
     // Copy String
-    const log_file: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 0));
+    const log_file: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 0));
     errdefer mem.a.free(log_file);
 
     // Copy String
-    const push_ip: [:0]const u8 = try mem.a.dupeZ(u8, columnSlice(stmt, 1));
+    const push_ip: [:0]const u8 = try mem.a.dupeZ(u8, Conn.getColumnSlice(stmt, 1));
     errdefer mem.a.free(push_ip);
 
     // Read Ints
@@ -58,20 +56,13 @@ pub fn read(conn: Conn) ReadError!*const Settings {
     const timeout_s: u32 = std.math.cast(u32, c.sqlite3_column_int(stmt, 4)) orelse
         return error.ValueOutOfRange;
 
-    // Alloc
-    const settings: *Settings = try mem.a.create(Settings);
-    errdefer mem.a.destroy(settings);
-
-    // Write
-    settings.* = Settings{
+    return Settings{
         .log_file = log_file,
         .push_ip = push_ip,
         .push_port = push_port,
         .push_freq_s = push_freq_s,
         .timeout_s = timeout_s,
     };
-
-    return settings;
 }
 
 pub const WriteError = error{ PrepareFailed, BindFailed, StepFailed };
