@@ -5,8 +5,8 @@ const c = @import("c.zig").gtk;
 
 const mem = @import("../../mem.zig");
 
-const App = @import("App.zig");
 const Settings = @import("../../model/db/Settings.zig");
+const App = @import("App.zig");
 
 pub const idx = 2;
 pub const label = "Settings";
@@ -95,29 +95,26 @@ pub fn create(app: *App) [*c]c.GtkWidget {
         std.fmt.bufPrintZ(&buf, "{d}", .{settings.timeout_s}) catch unreachable,
     );
 
-    // zig fmt: off
     // Assemble grid
-
+    // zig fmt: off
     // 1st column
     c.gtk_grid_attach(grid, label_log_file,              0, 0, 1, 1);
     c.gtk_grid_attach(grid, label_push_ip,               0, 1, 1, 1);
     c.gtk_grid_attach(grid, label_push_port,             0, 2, 1, 1);
     c.gtk_grid_attach(grid, label_push_freq_s,           0, 3, 1, 1);
     c.gtk_grid_attach(grid, label_timeout_s,             0, 4, 1, 1);
-
     // 2nd column
     c.gtk_grid_attach(grid, entry_log_file,              1, 0, 1, 1);
     c.gtk_grid_attach(grid, entry_push_ip,               1, 1, 1, 1);
     c.gtk_grid_attach(grid, entry_push_port,             1, 2, 1, 1);
     c.gtk_grid_attach(grid, entry_push_freq_s,           1, 3, 1, 1);
     c.gtk_grid_attach(grid, entry_timeout_s,             1, 4, 1, 1);
-
     // 3rd column
     c.gtk_grid_attach(grid, btn_browse,                  2, 0, 1, 1);
     c.gtk_grid_attach(grid, label_unit_suffix_freq_s,    2, 3, 1, 1);
     c.gtk_grid_attach(grid, label_unit_suffix_timeout_s, 2, 4, 1, 1);
-
     // zig fmt: on
+
     // Save button
     const btn_save: [*c]c.GtkWidget = c.gtk_button_new_with_label("Save");
     _ = c.g_signal_connect_data(btn_save, "clicked", @ptrCast(&clicked_on_save), @ptrCast(app), null, 0);
@@ -129,10 +126,6 @@ pub fn create(app: *App) [*c]c.GtkWidget {
     c.gtk_box_pack_end(@ptrCast(vbox), btn_save, 0, 0, 0);
 
     return vbox;
-}
-
-pub fn createLabel() *c.GtkWidget {
-    return c.gtk_label_new(label);
 }
 
 fn clicked_on_browse(_: [*c]c.GtkButton, _: c.gpointer) callconv(.c) void {

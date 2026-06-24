@@ -39,6 +39,7 @@ gtk_app: [*c]c.GtkApplication,
 status: Status = .Ready,
 current_page: c_int = -1,
 notebook: [*c]c.GtkNotebook = null,
+log_text_view: [*c]c.GtkTextView = null,
 settings_entries: SettingsEntries = .{},
 status_label: [*c]c.GtkLabel = null,
 
@@ -83,6 +84,20 @@ fn activate(gtk_app: [*c]c.GtkApplication, data: c.gpointer) callconv(.c) void {
 
     app.updateStatusLabel();
     app.updateCurrentPage();
+
+    // Append some lines to the log
+
+    var buf: [256]u8 = undefined;
+    const db_line: [:0]const u8 = std.fmt.bufPrintZ(&buf, "[INFO] Connected to database: {s}", .{
+        app.cfg.db_filename,
+    }) catch |err| @errorName(err);
+
+    app.logAppend("[INFO] Application started");
+    app.logAppend(db_line);
+    app.logAppend("[INFO] Polling interval: 60s");
+    app.logAppend("[WARN] Clock 3 (Cancillería 1 Estacionamiento) last seen 42s ago");
+    app.logAppend("[INFO] Clock 1 (Cancillería 1 Entrada Principal) synced OK");
+    app.logAppend("[INFO] Clock 2 (Cancillería 1 Entrada Lateral) synced OK");
 }
 
 pub fn setCurrentPage(self: *App, n: c_int) void {
@@ -102,6 +117,24 @@ pub fn setStatus(self: *App, status: Status) void {
 
 fn updateStatusLabel(self: App) void {
     c.gtk_label_set_text(self.status_label, self.status.tagName());
+}
+
+fn logAppend(app: App, line: [:0]const u8) void {
+    const text_buffer: [*c]c.GtkTextBuffer = c.gtk_text_view_get_buffer(app.log_text_view);
+
+    var iter: c.GtkTextIter = undefined;
+    c.gtk_text_buffer_get_end_iter(text_buffer, &iter);
+
+    if (0 < c.gtk_text_buffer_get_char_count(text_buffer)) {
+        c.gtk_text_buffer_insert(text_buffer, &iter, "\n", 1);
+    }
+    c.gtk_text_buffer_insert(text_buffer, &iter, line, @intCast(line.len));
+
+    // Scroll to bottom
+    // TODO: Revisar esto.
+    // Creo que tengo que liberar (free) los marks.
+    const mark: [*c]c.GtkTextMark = c.gtk_text_buffer_create_mark(text_buffer, null, &iter, 0);
+    c.gtk_text_view_scroll_mark_onscreen(app.log_text_view, mark);
 }
 
 pub const LoadClocksTreeError = ClocksTree.ReadError;
